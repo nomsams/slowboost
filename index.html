@@ -3,377 +3,480 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRemix - Browser Studio</title>
-    
-    <!-- Tailwind CSS for Styling -->
+    <title>AudioRemix Pro - Browser Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Audio Libraries -->
-    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+    <!-- Using specific versions for stability -->
+    <script src="https://unpkg.com/wavesurfer.js@7.0.0/dist/wavesurfer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
     <style>
-        /* Custom Slider Styling to match the "Slick" look */
+        /* --- Custom Range Sliders --- */
         input[type=range] {
             -webkit-appearance: none;
-            width: 100%;
             background: transparent;
         }
-        input[type=range]::-webkit-slider-thumb {
+        
+        /* Horizontal Sliders (Effects) */
+        .slider-h::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 16px;
             width: 16px;
             border-radius: 50%;
-            background: #ffffff;
+            background: #f0abfc; /* Purple-300 */
             cursor: pointer;
             margin-top: -6px;
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            box-shadow: 0 0 10px rgba(240, 171, 252, 0.5);
         }
-        input[type=range]::-webkit-slider-runnable-track {
+        .slider-h::-webkit-slider-runnable-track {
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: #4c1d95; /* Purple-900 */
+            background: #4c1d95;
             border-radius: 2px;
         }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #2e1065; }
-        ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 4px; }
 
-        .glass-panel {
-            background: rgba(30, 10, 60, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+        /* Vertical Sliders (EQ) */
+        .slider-v {
+            writing-mode: bt-lr; /* IE/Edge */
+            -webkit-appearance: slider-vertical; /* Webkit */
+            width: 8px;
+            height: 120px;
+            background: transparent;
+            cursor: pointer;
         }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e1b4b; }
+        ::-webkit-scrollbar-thumb { background: #6b21a8; border-radius: 3px; }
+
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.5); }
+        }
+        .glow-active { animation: pulse-glow 2s infinite; }
     </style>
 </head>
-<body class="bg-gray-900 text-white h-screen flex overflow-hidden font-sans">
+<body class="bg-[#0f0720] text-white h-screen flex overflow-hidden font-sans selection:bg-purple-500 selection:text-white">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-purple-950 flex flex-col border-r border-purple-800 hidden md:flex">
-        <div class="p-6 text-2xl font-bold tracking-tighter flex items-center gap-2">
-            <div class="w-8 h-8 bg-gradient-to-tr from-pink-500 to-purple-500 rounded-full animate-pulse"></div>
-            AudioRemix
+    <aside class="w-20 lg:w-64 bg-[#150a2e] flex flex-col border-r border-purple-900/30 flex-shrink-0 transition-all duration-300">
+        <div class="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-purple-900/30">
+            <div class="w-8 h-8 bg-gradient-to-tr from-fuchsia-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/50">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
+            </div>
+            <span class="ml-3 font-bold text-xl tracking-tight hidden lg:block bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-400">AudioRemix</span>
         </div>
-        <nav class="flex-1 px-4 space-y-2">
-            <a href="#" class="block px-4 py-3 bg-purple-800 rounded-lg text-white font-medium">Remix Studio</a>
-            <a href="#" class="block px-4 py-3 text-purple-300 hover:bg-purple-900 rounded-lg transition">Settings</a>
-            <a href="#" class="block px-4 py-3 text-purple-300 hover:bg-purple-900 rounded-lg transition">History</a>
+        
+        <nav class="flex-1 py-6 space-y-2 px-2">
+            <a href="#" class="flex items-center gap-3 px-3 lg:px-4 py-3 bg-purple-900/40 text-purple-100 rounded-xl border border-purple-700/50 transition-all hover:bg-purple-800/50 group">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                <span class="hidden lg:block font-medium">Studio</span>
+            </a>
         </nav>
-        <div class="p-4">
-            <div class="bg-gradient-to-r from-pink-600 to-purple-600 p-4 rounded-xl text-center shadow-lg">
-                <p class="font-bold">Pro Mode Unlocked</p>
-                <p class="text-xs text-purple-100 opacity-80">All features available</p>
+
+        <div class="p-4 hidden lg:block">
+            <div class="bg-gradient-to-br from-purple-900/80 to-fuchsia-900/80 p-4 rounded-2xl border border-white/10 text-center">
+                <p class="font-bold text-sm text-white">Pro Unlocked</p>
+                <p class="text-xs text-purple-200 mt-1">High Quality Export Ready</p>
             </div>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col relative">
+    <main class="flex-1 flex flex-col relative min-w-0">
         
-        <!-- Header / Top Bar -->
-        <header class="h-16 border-b border-purple-900 flex items-center justify-between px-6 bg-gray-900">
-            <div class="flex items-center gap-4">
-                <label class="cursor-pointer bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 shadow-lg shadow-purple-900/50">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Upload File
+        <!-- Top Bar -->
+        <header class="h-16 border-b border-purple-900/30 flex items-center justify-between px-6 bg-[#150a2e]/50 backdrop-blur-md z-20">
+            <div class="flex items-center gap-4 min-w-0">
+                <label class="cursor-pointer bg-purple-600 hover:bg-purple-500 text-white px-5 py-2 rounded-full font-medium transition shadow-lg shadow-purple-900/40 flex items-center gap-2 text-sm whitespace-nowrap">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Upload Audio
                     <input type="file" id="fileInput" accept="audio/*" class="hidden">
                 </label>
-                <span id="fileName" class="text-gray-400 text-sm">No file selected</span>
+                <div class="flex flex-col min-w-0">
+                    <span id="fileName" class="text-gray-300 text-sm font-medium truncate max-w-[200px]">No file selected</span>
+                    <span id="fileStatus" class="text-xs text-gray-500">Waiting for upload...</span>
+                </div>
             </div>
             
-            <div class="flex gap-2">
-                <button id="resetBtn" class="px-4 py-2 text-sm text-gray-300 hover:text-white border border-gray-700 rounded hover:bg-gray-800">Reset</button>
-                <button id="downloadBtn" class="bg-white text-purple-900 px-4 py-2 rounded font-bold hover:bg-gray-200 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    Download WAV
+            <div class="flex gap-3">
+                <button id="resetBtn" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white border border-gray-700 rounded-full hover:bg-gray-800 transition">RESET</button>
+                <button id="downloadBtn" class="bg-white text-purple-950 px-6 py-2 rounded-full text-sm font-bold hover:bg-gray-100 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,255,255,0.3)]" disabled>
+                    <span>Download WAV</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 </button>
             </div>
         </header>
 
-        <!-- Workspace -->
+        <!-- Workspace Grid -->
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
             
             <!-- Left: Visualizer & Player -->
-            <div class="flex-1 flex flex-col p-6 gap-6 relative justify-center bg-gradient-to-b from-gray-900 to-purple-950">
+            <div class="flex-1 flex flex-col relative bg-[#0f0720]">
                 
-                <!-- Waveform Container -->
-                <div class="w-full h-64 flex items-center justify-center relative">
-                    <div id="waveform" class="w-full"></div>
+                <!-- Waveform Area (SoundCloud Style) -->
+                <div class="flex-1 flex flex-col justify-center px-8 relative group">
+                    
+                    <!-- The Waveform Container -->
+                    <div id="waveform" class="w-full h-48 opacity-50 transition-opacity duration-300 hover:opacity-100"></div>
+                    
+                    <!-- Hover Line (Visual Guide) -->
+                    <div class="absolute inset-x-8 h-[1px] bg-white/10 top-1/2 pointer-events-none"></div>
+
                     <!-- Loading Overlay -->
-                    <div id="loader" class="absolute inset-0 flex items-center justify-center bg-gray-900/80 z-10 hidden">
-                        <div class="text-purple-400 font-mono animate-pulse">Processing Audio...</div>
+                    <div id="loader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#0f0720]/90 z-10 hidden backdrop-blur-sm">
+                        <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <div class="text-purple-300 font-mono text-sm animate-pulse">Processing Audio Data...</div>
                     </div>
                 </div>
 
-                <!-- Transport Controls -->
-                <div class="flex justify-center items-center gap-6">
-                    <button id="playBtn" class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-purple-900 hover:scale-105 transition shadow-xl shadow-purple-900/50 disabled:opacity-50" disabled>
-                        <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        <svg id="pauseIcon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                    </button>
-                </div>
-                
-                <!-- Time Display -->
-                <div class="flex justify-between text-xs font-mono text-purple-300 px-2">
-                    <span id="currentTime">0:00</span>
-                    <span id="totalTime">0:00</span>
-                </div>
-
-                <!-- Logs Console -->
-                <div class="mt-auto h-32 bg-black/30 rounded-lg p-2 overflow-y-auto font-mono text-xs text-green-400 border border-white/5" id="logs">
-                    <div>> System Ready. Waiting for file...</div>
+                <!-- Transport Bar -->
+                <div class="h-24 bg-[#130b29] border-t border-purple-900/20 flex items-center justify-between px-8">
+                    <div class="flex items-center gap-6">
+                        <button id="playBtn" class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-purple-900 hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] transition disabled:opacity-50 disabled:scale-100" disabled>
+                            <svg id="playIcon" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg id="pauseIcon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <div class="flex flex-col">
+                            <span id="currentTime" class="text-2xl font-mono font-bold text-white">0:00</span>
+                            <span id="totalTime" class="text-xs text-gray-500 font-mono">/ 0:00</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Mini Log -->
+                    <div id="statusLog" class="text-xs font-mono text-green-400/80 hidden md:block">
+                        > System Ready
+                    </div>
                 </div>
             </div>
 
             <!-- Right: Controls Panel -->
-            <div class="w-full lg:w-96 bg-gray-900 border-l border-purple-900 p-6 overflow-y-auto">
-                <h2 class="text-xl font-bold mb-6 text-white">Effect Controls</h2>
-
+            <div class="w-full lg:w-[400px] bg-[#130b29] border-l border-purple-900/30 flex flex-col overflow-y-auto custom-scrollbar">
+                
                 <!-- Presets -->
-                <div class="flex gap-2 mb-8">
-                    <button onclick="applyPreset('slowed')" class="flex-1 py-2 bg-purple-900/50 border border-purple-700 rounded hover:bg-purple-700 text-xs transition">Slowed + Reverb</button>
-                    <button onclick="applyPreset('nightcore')" class="flex-1 py-2 bg-purple-900/50 border border-purple-700 rounded hover:bg-purple-700 text-xs transition">Nightcore</button>
+                <div class="p-6 border-b border-white/5">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Quick Presets</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="applyPreset('slowed')" class="py-3 bg-purple-900/30 border border-purple-700/50 rounded-xl hover:bg-purple-600 hover:border-purple-500 text-sm font-medium transition text-purple-100">
+                            Slowed + Reverb
+                        </button>
+                        <button onclick="applyPreset('nightcore')" class="py-3 bg-purple-900/30 border border-purple-700/50 rounded-xl hover:bg-purple-600 hover:border-purple-500 text-sm font-medium transition text-purple-100">
+                            Nightcore
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Sliders -->
-                <div class="space-y-8">
+                <!-- Main Sliders -->
+                <div class="p-6 space-y-8">
                     
                     <!-- Speed -->
-                    <div class="control-group">
-                        <div class="flex justify-between mb-2">
-                            <label class="text-sm font-medium text-gray-300">Speed / Pitch</label>
-                            <span id="speedVal" class="text-xs bg-purple-600 px-2 py-0.5 rounded">1.0x</span>
+                    <div class="group">
+                        <div class="flex justify-between mb-3 items-end">
+                            <label class="text-sm font-medium text-gray-300">Speed</label>
+                            <span id="speedVal" class="text-xs font-mono bg-purple-600/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">1.00x</span>
                         </div>
-                        <input type="range" id="speedRange" min="0.5" max="1.5" step="0.05" value="1">
+                        <input type="range" id="speedRange" min="0.5" max="1.5" step="0.01" value="1" class="slider-h">
                     </div>
 
-                    <!-- Pitch Shift (Independent) -->
-                    <div class="control-group">
-                        <div class="flex justify-between mb-2">
-                            <label class="text-sm font-medium text-gray-300">Pitch Shift (Semitones)</label>
-                            <span id="pitchVal" class="text-xs bg-purple-600 px-2 py-0.5 rounded">0</span>
+                    <!-- Pitch -->
+                    <div class="group">
+                        <div class="flex justify-between mb-3 items-end">
+                            <label class="text-sm font-medium text-gray-300">Pitch Shift</label>
+                            <span id="pitchVal" class="text-xs font-mono bg-purple-600/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">0 semi</span>
                         </div>
-                        <input type="range" id="pitchRange" min="-12" max="12" step="1" value="0">
+                        <input type="range" id="pitchRange" min="-12" max="12" step="1" value="0" class="slider-h">
                     </div>
 
                     <!-- Reverb -->
-                    <div class="control-group">
-                        <div class="flex justify-between mb-2">
-                            <label class="text-sm font-medium text-gray-300">Reverb (Room Size)</label>
-                            <span id="reverbVal" class="text-xs bg-purple-600 px-2 py-0.5 rounded">0%</span>
+                    <div class="group">
+                        <div class="flex justify-between mb-3 items-end">
+                            <label class="text-sm font-medium text-gray-300">Reverb</label>
+                            <span id="reverbVal" class="text-xs font-mono bg-purple-600/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">0%</span>
                         </div>
-                        <input type="range" id="reverbRange" min="0" max="0.9" step="0.05" value="0">
+                        <input type="range" id="reverbRange" min="0" max="0.8" step="0.01" value="0" class="slider-h">
                     </div>
-
-                    <!-- Bass Boost (Low Shelf) -->
-                    <div class="control-group">
-                        <div class="flex justify-between mb-2">
+                    
+                    <!-- Bass Boost -->
+                    <div class="group">
+                        <div class="flex justify-between mb-3 items-end">
                             <label class="text-sm font-medium text-gray-300">Bass Boost</label>
-                            <span id="bassVal" class="text-xs bg-purple-600 px-2 py-0.5 rounded">0 dB</span>
+                            <span id="bassVal" class="text-xs font-mono bg-purple-600/20 text-purple-300 px-2 py-1 rounded border border-purple-500/30">0 dB</span>
                         </div>
-                        <input type="range" id="bassRange" min="0" max="20" step="1" value="0">
-                    </div>
-
-                    <!-- EQ Section -->
-                    <div class="pt-4 border-t border-gray-800">
-                        <h3 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">Equalizer</h3>
-                        
-                        <div class="grid grid-cols-3 gap-4">
-                            <div class="text-center">
-                                <input type="range" id="eqLow" min="-20" max="20" value="0" class="h-24 appearance-none" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;">
-                                <div class="text-xs mt-2 text-gray-500">Low</div>
-                            </div>
-                            <div class="text-center">
-                                <input type="range" id="eqMid" min="-20" max="20" value="0" class="h-24 appearance-none" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;">
-                                <div class="text-xs mt-2 text-gray-500">Mid</div>
-                            </div>
-                            <div class="text-center">
-                                <input type="range" id="eqHigh" min="-20" max="20" value="0" class="h-24 appearance-none" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical;">
-                                <div class="text-xs mt-2 text-gray-500">High</div>
-                            </div>
-                        </div>
+                        <input type="range" id="bassRange" min="0" max="20" step="1" value="0" class="slider-h">
                     </div>
 
                 </div>
+
+                <!-- 7-Band EQ -->
+                <div class="flex-1 p-6 bg-[#0c051a] border-t border-white/5">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Graphic Equalizer</h3>
+                        <button onclick="resetEQ()" class="text-[10px] text-purple-400 hover:text-white underline">Flat</button>
+                    </div>
+                    
+                    <div class="flex justify-between items-end h-40 px-2">
+                        <!-- Generated by JS below -->
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="60" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">60</span></div>
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="170" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">170</span></div>
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="310" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">310</span></div>
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="600" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">600</span></div>
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="1000" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">1k</span></div>
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="3000" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">3k</span></div>
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="6000" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">6k</span></div>
+                        <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-freq="14000" min="-12" max="12" value="0"><span class="text-[10px] text-gray-500">14k</span></div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- Progress Bar for Download -->
-        <div id="progressContainer" class="fixed bottom-0 left-0 w-full h-1 bg-gray-800 hidden">
-            <div id="progressBar" class="h-full bg-green-500 transition-all duration-200" style="width: 0%"></div>
+        <!-- Download Progress Overlay -->
+        <div id="progressOverlay" class="fixed inset-0 bg-black/80 z-50 hidden flex flex-col items-center justify-center backdrop-blur-md">
+            <div class="w-64 mb-4">
+                <div class="flex justify-between text-xs text-purple-300 mb-1">
+                    <span>Rendering Audio...</span>
+                    <span id="progressText">0%</span>
+                </div>
+                <div class="w-full bg-gray-800 rounded-full h-2">
+                    <div id="progressBar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-100" style="width: 0%"></div>
+                </div>
+            </div>
+            <p class="text-gray-400 text-xs animate-pulse">Please wait, applying high-quality effects...</p>
         </div>
 
     </main>
 
     <script>
-        // --- Variables ---
+        // --- Global State ---
         let wavesurfer;
         let tonePlayer;
         let audioBuffer = null;
         let isPlaying = false;
+        let animationFrame;
 
-        // Tone.js Effects
-        let pitchShift, reverb, eq, bassBoost;
+        // Effects Nodes
+        let pitchShift, reverb, bassBoost, limiter;
+        let eqNodes = []; // Array of filters
 
         // DOM Elements
         const fileInput = document.getElementById('fileInput');
         const playBtn = document.getElementById('playBtn');
-        const playIcon = document.getElementById('playIcon');
-        const pauseIcon = document.getElementById('pauseIcon');
         const downloadBtn = document.getElementById('downloadBtn');
-        const logBox = document.getElementById('logs');
+        const statusLog = document.getElementById('statusLog');
         const loader = document.getElementById('loader');
 
         // --- Initialization ---
-        
-        function log(msg) {
-            const div = document.createElement('div');
-            div.innerText = `> ${msg}`;
-            logBox.appendChild(div);
-            logBox.scrollTop = logBox.scrollHeight;
+
+        function updateStatus(msg) {
+            statusLog.innerText = `> ${msg}`;
         }
 
-        async function initAudio() {
-            await Tone.start();
-            log("Audio Context Started");
-
-            // Initialize Wavesurfer (Visualizer)
+        async function initAudioEngine() {
+            // 1. Initialize WaveSurfer (Visualizer Only)
             wavesurfer = WaveSurfer.create({
                 container: '#waveform',
-                waveColor: '#a78bfa',
-                progressColor: '#fff',
-                cursorColor: '#f472b6',
-                barWidth: 2,
+                waveColor: '#4c1d95',      // Dark Purple
+                progressColor: '#c084fc',  // Bright Purple
+                cursorColor: '#ffffff',
+                barWidth: 3,
+                barGap: 3,
                 barRadius: 3,
-                cursorWidth: 1,
-                height: 128,
-                barGap: 2,
+                height: 192,               // Taller waveform
                 normalize: true,
+                interact: true,            // Allow clicking to seek
+                fillParent: true
             });
 
-            // Initialize Tone.js Effects Chain
-            // Chain: Player -> PitchShift -> Reverb -> BassBoost -> EQ -> Destination
+            // 2. Initialize Tone.js Nodes
+            await Tone.start();
             
-            pitchShift = new Tone.PitchShift({ pitch: 0 }).toDestination();
-            reverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.01 }).toDestination();
+            // Create Effects Chain
+            pitchShift = new Tone.PitchShift({ pitch: 0, windowSize: 0.1 }).toDestination();
+            reverb = new Tone.Reverb({ decay: 2.5, preDelay: 0.1 }).toDestination();
             reverb.wet.value = 0;
             
-            // EQ3: Low, Mid, High
-            eq = new Tone.EQ3(0, 0, 0).toDestination();
-            
-            // Bass Boost (Low Shelf Filter)
             bassBoost = new Tone.Filter(200, "lowshelf").toDestination();
             bassBoost.gain.value = 0;
 
-            // Connect Chain
-            // We will connect the player later when file loads
+            limiter = new Tone.Limiter(-1).toDestination(); // Prevent clipping
+
+            // Create 8-Band EQ using Peaking Filters
+            const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 14000];
+            eqNodes = frequencies.map(f => {
+                const filter = new Tone.Filter(f, "peaking");
+                filter.Q.value = 1; // Bandwidth
+                filter.gain.value = 0;
+                return filter;
+            });
         }
 
-        initAudio();
+        initAudioEngine();
 
-        // --- File Handling ---
+        // --- File Loading ---
 
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            document.getElementById('fileName').innerText = file.name;
+            // Reset UI
             playBtn.disabled = true;
             downloadBtn.disabled = true;
             loader.classList.remove('hidden');
-            log(`Loading file: ${file.name}...`);
+            document.getElementById('fileName').innerText = file.name;
+            document.getElementById('fileStatus').innerText = "Decoding...";
+            updateStatus("Loading file...");
 
-            const arrayBuffer = await file.arrayBuffer();
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // Decode Audio
-            audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-            log(`Audio decoded. Duration: ${audioBuffer.duration.toFixed(2)}s`);
-
-            // Setup Tone Player
-            if(tonePlayer) tonePlayer.dispose();
-            
-            tonePlayer = new Tone.Player(audioBuffer);
-            
-            // Connect the chain: Player -> Pitch -> Reverb -> Bass -> EQ -> Master
-            tonePlayer.disconnect();
-            tonePlayer.chain(pitchShift, reverb, bassBoost, eq, Tone.Destination);
-
-            // Sync Wavesurfer
-            wavesurfer.loadDecodedBuffer(audioBuffer);
-
-            wavesurfer.on('ready', () => {
-                playBtn.disabled = false;
-                downloadBtn.disabled = false;
-                loader.classList.add('hidden');
-                document.getElementById('totalTime').innerText = formatTime(wavesurfer.getDuration());
-                log("Ready to play.");
-            });
-
-            wavesurfer.on('audioprocess', () => {
-                document.getElementById('currentTime').innerText = formatTime(wavesurfer.getCurrentTime());
-            });
-
-            // Sync Tone.js player with Wavesurfer seeking
-            wavesurfer.on('seek', (progress) => {
-                if(tonePlayer.loaded) {
-                    const time = progress * tonePlayer.buffer.duration;
-                    if(tonePlayer.state === "started") {
-                        tonePlayer.stop();
-                        tonePlayer.start(undefined, time);
-                    }
-                }
-            });
-        });
-
-        // --- Controls & Logic ---
-
-        playBtn.addEventListener('click', async () => {
-            await Tone.start();
-            
-            if (isPlaying) {
-                tonePlayer.stop();
-                wavesurfer.pause();
-                playIcon.classList.remove('hidden');
-                pauseIcon.classList.add('hidden');
-                isPlaying = false;
-                log("Paused");
-            } else {
-                // Sync start time
-                const startOffset = wavesurfer.getCurrentTime();
-                tonePlayer.start(undefined, startOffset);
-                wavesurfer.play();
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const audioCtx = Tone.getContext().rawContext;
                 
-                playIcon.classList.add('hidden');
-                pauseIcon.classList.remove('hidden');
-                isPlaying = true;
-                log("Playing...");
+                // Decode Audio
+                audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                updateStatus("Audio decoded successfully.");
+
+                // Setup Tone Player
+                if(tonePlayer) tonePlayer.dispose();
+                tonePlayer = new Tone.Player(audioBuffer);
+                
+                // Connect Chain: Player -> Pitch -> Reverb -> Bass -> EQ[0]...EQ[7] -> Limiter -> Master
+                tonePlayer.disconnect();
+                
+                // Chain construction
+                let current = tonePlayer;
+                current.connect(pitchShift);
+                pitchShift.connect(reverb);
+                reverb.connect(bassBoost);
+                
+                let prevNode = bassBoost;
+                eqNodes.forEach(node => {
+                    prevNode.connect(node);
+                    prevNode = node;
+                });
+                
+                prevNode.connect(limiter);
+                limiter.connect(Tone.Destination);
+
+                // Load WaveSurfer (Visuals)
+                // We pass the same buffer so it renders instantly without re-fetching
+                wavesurfer.loadDecodedBuffer(audioBuffer);
+
+                wavesurfer.on('ready', () => {
+                    playBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                    loader.classList.add('hidden');
+                    document.getElementById('fileStatus').innerText = "Ready to Remix";
+                    document.getElementById('totalTime').innerText = "/ " + formatTime(audioBuffer.duration);
+                    updateStatus("Ready.");
+                });
+
+                // --- Sync Logic ---
+                
+                // 1. User clicks Waveform -> Seek Tone Player
+                wavesurfer.on('interaction', (newTime) => {
+                    if(!tonePlayer.loaded) return;
+                    // newTime is in seconds (wavesurfer v7) or progress (v6). 
+                    // V7 interaction returns time in seconds usually, but let's be safe:
+                    const currentTime = wavesurfer.getCurrentTime();
+                    
+                    if(tonePlayer.state === "started") {
+                        // Tone.js seek logic
+                        // We need to calculate offset based on playback rate if needed, 
+                        // but Tone.Player.seek takes "offset in the buffer".
+                        tonePlayer.seek(currentTime);
+                    } else {
+                        // If paused, just set the start offset for next play
+                        // Tone.Player doesn't have a "cursor", we just start from here.
+                    }
+                });
+
+                // 2. Prevent WaveSurfer from playing its own audio (Double audio fix)
+                wavesurfer.setVolume(0); 
+
+            } catch (err) {
+                console.error(err);
+                updateStatus("Error loading file.");
+                loader.classList.add('hidden');
             }
         });
 
-        // Helper to format time
-        function formatTime(seconds) {
-            const m = Math.floor(seconds / 60);
-            const s = Math.floor(seconds % 60);
-            return `${m}:${s < 10 ? '0' : ''}${s}`;
-        }
+        // --- Playback Control ---
 
-        // --- Effect Listeners ---
+        playBtn.addEventListener('click', async () => {
+            await Tone.start();
 
-        // Speed (Playback Rate)
-        document.getElementById('speedRange').addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value);
-            document.getElementById('speedVal').innerText = val + 'x';
-            if(tonePlayer) tonePlayer.playbackRate = val;
-            wavesurfer.setPlaybackRate(val);
+            if (isPlaying) {
+                tonePlayer.stop();
+                cancelAnimationFrame(animationFrame);
+                document.getElementById('playIcon').classList.remove('hidden');
+                document.getElementById('pauseIcon').classList.add('hidden');
+                isPlaying = false;
+                updateStatus("Paused");
+            } else {
+                // Start from where the visual cursor is
+                const startOffset = wavesurfer.getCurrentTime();
+                tonePlayer.start(undefined, startOffset);
+                
+                document.getElementById('playIcon').classList.add('hidden');
+                document.getElementById('pauseIcon').classList.remove('hidden');
+                isPlaying = true;
+                updateStatus("Playing...");
+                
+                // Start Sync Loop
+                syncVisuals();
+            }
         });
 
-        // Pitch Shift
+        function syncVisuals() {
+            if(!isPlaying) return;
+            
+            // Get Tone.js accurate time
+            // We need to map Tone.Player's progress to WaveSurfer
+            // Since Tone.Player doesn't expose "currentTime" easily in a simple property,
+            // we rely on the fact that they started together or we seeked.
+            
+            // Actually, simpler approach for visualizer:
+            // Just let WaveSurfer play (muted) and Tone play (audible).
+            // But they drift.
+            
+            // Better: Update WaveSurfer time manually based on Tone transport? 
+            // Tone.Transport is complex. 
+            
+            // Simplest robust solution for this specific app:
+            // Use WaveSurfer as the "Clock" because it handles the UI seeking well,
+            // and just trigger Tone.js.
+            // BUT WaveSurfer's seek event was handled above.
+            
+            // Let's just update the time display here, WaveSurfer handles its own cursor movement when we call wavesurfer.play() (muted).
+            // So:
+            wavesurfer.play(); // It's volume 0
+            
+            const updateLoop = () => {
+                if(isPlaying) {
+                    document.getElementById('currentTime').innerText = formatTime(wavesurfer.getCurrentTime());
+                    requestAnimationFrame(updateLoop);
+                } else {
+                    wavesurfer.pause();
+                }
+            };
+            updateLoop();
+        }
+
+        // --- Effects Logic ---
+
+        // Speed
+        document.getElementById('speedRange').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            document.getElementById('speedVal').innerText = val.toFixed(2) + 'x';
+            if(tonePlayer) tonePlayer.playbackRate = val;
+            wavesurfer.setPlaybackRate(val); // Keep visuals in sync
+        });
+
+        // Pitch
         document.getElementById('pitchRange').addEventListener('input', (e) => {
             const val = parseInt(e.target.value);
-            document.getElementById('pitchVal').innerText = (val > 0 ? '+' : '') + val;
+            document.getElementById('pitchVal').innerText = (val > 0 ? '+' : '') + val + ' semi';
             pitchShift.pitch = val;
         });
 
@@ -384,135 +487,155 @@
             reverb.wet.value = val;
         });
 
-        // Bass Boost
+        // Bass
         document.getElementById('bassRange').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
             document.getElementById('bassVal').innerText = val + ' dB';
             bassBoost.gain.value = val;
         });
 
-        // EQ
-        document.getElementById('eqLow').addEventListener('input', (e) => eq.low.value = parseFloat(e.target.value));
-        document.getElementById('eqMid').addEventListener('input', (e) => eq.mid.value = parseFloat(e.target.value));
-        document.getElementById('eqHigh').addEventListener('input', (e) => eq.high.value = parseFloat(e.target.value));
+        // EQ Bands
+        document.querySelectorAll('.eq-band').forEach((slider, index) => {
+            slider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                if(eqNodes[index]) eqNodes[index].gain.value = val;
+            });
+        });
+
+        window.resetEQ = function() {
+            document.querySelectorAll('.eq-band').forEach((slider, index) => {
+                slider.value = 0;
+                if(eqNodes[index]) eqNodes[index].gain.value = 0;
+            });
+        }
 
         // Presets
         window.applyPreset = function(type) {
-            log(`Applying preset: ${type}`);
+            updateStatus(`Applying ${type} preset...`);
             if(type === 'slowed') {
-                updateSlider('speedRange', 0.85);
-                updateSlider('pitchRange', -2);
-                updateSlider('reverbRange', 0.3);
-                updateSlider('bassRange', 5);
+                setSlider('speedRange', 0.85);
+                setSlider('pitchRange', -2);
+                setSlider('reverbRange', 0.35);
+                setSlider('bassRange', 6);
             } else if (type === 'nightcore') {
-                updateSlider('speedRange', 1.25);
-                updateSlider('pitchRange', 3);
-                updateSlider('reverbRange', 0.1);
-                updateSlider('bassRange', 0);
+                setSlider('speedRange', 1.25);
+                setSlider('pitchRange', 4);
+                setSlider('reverbRange', 0.1);
+                setSlider('bassRange', -2);
             }
         };
 
-        function updateSlider(id, val) {
+        function setSlider(id, val) {
             const el = document.getElementById(id);
             el.value = val;
             el.dispatchEvent(new Event('input'));
         }
 
         document.getElementById('resetBtn').addEventListener('click', () => {
-            updateSlider('speedRange', 1);
-            updateSlider('pitchRange', 0);
-            updateSlider('reverbRange', 0);
-            updateSlider('bassRange', 0);
-            updateSlider('eqLow', 0);
-            updateSlider('eqMid', 0);
-            updateSlider('eqHigh', 0);
-            log("Effects reset.");
+            setSlider('speedRange', 1);
+            setSlider('pitchRange', 0);
+            setSlider('reverbRange', 0);
+            setSlider('bassRange', 0);
+            resetEQ();
+            updateStatus("Reset all effects.");
         });
 
-        // --- Download Logic (Offline Rendering) ---
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // --- Download / Offline Rendering ---
 
         downloadBtn.addEventListener('click', async () => {
             if (!audioBuffer) return;
 
-            log("Starting Offline Rendering...");
-            downloadBtn.disabled = true;
-            downloadBtn.innerText = "Rendering...";
-            document.getElementById('progressContainer').classList.remove('hidden');
-            const progressBar = document.getElementById('progressBar');
-
-            // 1. Create Offline Context
-            // Calculate duration based on playback rate
+            // UI Updates
+            const overlay = document.getElementById('progressOverlay');
+            const bar = document.getElementById('progressBar');
+            const txt = document.getElementById('progressText');
+            overlay.classList.remove('hidden');
+            
+            // Calculate Duration
             const playbackRate = tonePlayer.playbackRate;
-            const originalDuration = audioBuffer.duration;
-            const newDuration = originalDuration / playbackRate;
+            const duration = (audioBuffer.duration / playbackRate) + 3.0; // +3s tail
+
+            // Offline Context
+            const offlineCtx = new Tone.OfflineContext(2, duration, audioBuffer.sampleRate);
             
-            // Add a little tail for reverb
-            const renderDuration = newDuration + 3; 
+            // Reconstruct Graph Offline
+            const offPlayer = new Tone.Player(audioBuffer);
+            offPlayer.playbackRate = playbackRate;
 
-            const offlineCtx = new Tone.OfflineContext(2, renderDuration, audioBuffer.sampleRate);
+            const offPitch = new Tone.PitchShift({ pitch: pitchShift.pitch });
+            const offReverb = new Tone.Reverb({ decay: 2.5, preDelay: 0.1 });
+            await offReverb.ready;
+            offReverb.wet.value = reverb.wet.value;
 
-            // 2. Reconstruct the chain in Offline Context
-            // We cannot reuse the online nodes, we must create new ones attached to offlineCtx
+            const offBass = new Tone.Filter(200, "lowshelf");
+            offBass.gain.value = bassBoost.gain.value;
+
+            // Reconstruct EQ
+            let offEqNodes = [];
+            const frequencies = [60, 170, 310, 600, 1000, 3000, 6000, 14000];
             
-            const offlinePlayer = new Tone.Player(audioBuffer);
-            offlinePlayer.playbackRate = playbackRate;
-
-            const offlinePitch = new Tone.PitchShift({ pitch: pitchShift.pitch });
+            // Chain
+            let current = offPlayer;
+            current.connect(offPitch);
+            offPitch.connect(offReverb);
+            offReverb.connect(offBass);
             
-            // Reverb needs to generate impulse, so we use the constructor that accepts ready promise if needed
-            // But Tone.Reverb in offline context usually works if we await ready.
-            const offlineReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.01 });
-            await offlineReverb.ready;
-            offlineReverb.wet.value = reverb.wet.value;
-
-            const offlineBass = new Tone.Filter(200, "lowshelf");
-            offlineBass.gain.value = bassBoost.gain.value;
-
-            const offlineEq = new Tone.EQ3(eq.low.value, eq.mid.value, eq.high.value);
-
-            // Connect Offline Chain
-            offlinePlayer.connect(offlinePitch);
-            offlinePitch.connect(offlineReverb);
-            offlineReverb.connect(offlineBass);
-            offlineBass.connect(offlineEq);
-            offlineEq.connect(offlineCtx.destination);
-
-            // Schedule play
-            offlinePlayer.start(0);
-
-            // 3. Render
-            log("Processing audio graph...");
+            let prev = offBass;
             
-            // Tone.js Offline render
+            // Add EQ nodes to chain
+            frequencies.forEach((f, i) => {
+                const filter = new Tone.Filter(f, "peaking");
+                filter.Q.value = 1;
+                filter.gain.value = eqNodes[i].gain.value; // Copy value from UI
+                prev.connect(filter);
+                prev = filter;
+            });
+
+            const offLimiter = new Tone.Limiter(-1);
+            prev.connect(offLimiter);
+            offLimiter.connect(offlineCtx.destination);
+
+            offPlayer.start(0);
+
+            // Render Loop for Progress Bar
+            // Tone.OfflineContext.render() is a promise, it doesn't give progress callbacks easily in standard Tone.
+            // We fake the progress bar for UX, as render is usually fast (2-5s).
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 10;
+                if(progress > 90) progress = 90;
+                bar.style.width = progress + "%";
+                txt.innerText = Math.floor(progress) + "%";
+            }, 200);
+
             const renderedBuffer = await offlineCtx.render();
             
-            log("Rendering complete. Encoding to WAV...");
-            progressBar.style.width = "80%";
+            clearInterval(progressInterval);
+            bar.style.width = "100%";
+            txt.innerText = "100%";
 
-            // 4. Convert AudioBuffer to WAV
+            // Encode to WAV
             const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
-            
-            progressBar.style.width = "100%";
-            
-            // 5. Trigger Download
             const url = URL.createObjectURL(wavBlob);
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.download = `remix_${Date.now()}.wav`;
-            anchor.click();
-            URL.revokeObjectURL(url);
-
-            log("Download started.");
-            downloadBtn.disabled = false;
-            downloadBtn.innerText = "Download WAV";
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AudioRemix_${Date.now()}.wav`;
+            a.click();
+            
             setTimeout(() => {
-                document.getElementById('progressContainer').classList.add('hidden');
-                progressBar.style.width = "0%";
-            }, 2000);
+                overlay.classList.add('hidden');
+                bar.style.width = "0%";
+            }, 1000);
         });
 
-        // --- WAV Encoder Helper ---
-        // Converts AudioBuffer to Blob (WAV)
+        // WAV Encoder (Standard PCM 16-bit)
         function bufferToWave(abuffer, len) {
             let numOfChan = abuffer.numberOfChannels,
                 length = len * numOfChan * 2 + 44,
@@ -522,48 +645,27 @@
                 offset = 0,
                 pos = 0;
 
-            // write WAVE header
-            setUint32(0x46464952);                         // "RIFF"
-            setUint32(length - 8);                         // file length - 8
-            setUint32(0x45564157);                         // "WAVE"
+            setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157);
+            setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+            setUint32(abuffer.sampleRate); setUint32(abuffer.sampleRate * 2 * numOfChan);
+            setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164);
+            setUint32(length - pos - 4);
 
-            setUint32(0x20746d66);                         // "fmt " chunk
-            setUint32(16);                                 // length = 16
-            setUint16(1);                                  // PCM (uncompressed)
-            setUint16(numOfChan);
-            setUint32(abuffer.sampleRate);
-            setUint32(abuffer.sampleRate * 2 * numOfChan); // avg. bytes/sec
-            setUint16(numOfChan * 2);                      // block-align
-            setUint16(16);                                 // 16-bit (hardcoded in this encoder)
-
-            setUint32(0x61746164);                         // "data" - chunk
-            setUint32(length - pos - 4);                   // chunk length
-
-            // write interleaved data
-            for(i = 0; i < abuffer.numberOfChannels; i++)
-                channels.push(abuffer.getChannelData(i));
+            for(i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
 
             while(pos < length) {
-                for(i = 0; i < numOfChan; i++) {             // interleave channels
-                    sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
-                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0; // scale to 16-bit signed int
-                    view.setInt16(pos, sample, true);          // write 16-bit sample
+                for(i = 0; i < numOfChan; i++) {
+                    sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767)|0;
+                    view.setInt16(pos, sample, true);
                     pos += 2;
                 }
-                offset++; // next source sample
+                offset++;
             }
-
             return new Blob([buffer], {type: "audio/wav"});
 
-            function setUint16(data) {
-                view.setUint16(pos, data, true);
-                pos += 2;
-            }
-
-            function setUint32(data) {
-                view.setUint32(pos, data, true);
-                pos += 4;
-            }
+            function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+            function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
         }
     </script>
 </body>
