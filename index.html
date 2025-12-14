@@ -3,47 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AudioRemix Studio - Stable</title>
+    <title>AudioRemix - Pro Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Using stable, compatible versions -->
+    <!-- WaveSurfer 7 (Stable) -->
     <script src="https://unpkg.com/wavesurfer.js@7.0.0/dist/wavesurfer.min.js"></script>
+    <!-- Tone.js (Stable) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 
     <style>
-        /* Custom Range Inputs */
-        input[type=range] {
-            -webkit-appearance: none;
-            background: transparent;
-        }
+        /* --- UI Styling --- */
+        body { background-color: #05030a; color: white; }
+        
+        /* Sliders */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
         input[type=range]:focus { outline: none; }
         
-        /* Horizontal Slider Thumb */
+        /* Horizontal Slider */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 14px;
-            width: 14px;
+            height: 14px; width: 14px;
             border-radius: 50%;
-            background: #e879f9;
+            background: #d8b4fe; /* Purple-300 */
             cursor: pointer;
             margin-top: -5px;
-            box-shadow: 0 0 10px rgba(232, 121, 249, 0.5);
+            box-shadow: 0 0 10px rgba(216, 180, 254, 0.6);
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
+            width: 100%; height: 4px;
             cursor: pointer;
-            background: #4c1d95;
+            background: #4c1d95; /* Purple-900 */
             border-radius: 2px;
         }
 
         /* Vertical EQ Sliders */
         .slider-v {
-            writing-mode: bt-lr; /* IE/Edge */
-            -webkit-appearance: slider-vertical; /* Webkit */
-            width: 8px;
-            height: 100px;
-            background: transparent;
-            cursor: pointer;
+            writing-mode: bt-lr; /* IE */
+            -webkit-appearance: slider-vertical; /* WebKit */
+            width: 8px; height: 110px;
+            background: transparent; cursor: pointer;
         }
 
         /* Scrollbar */
@@ -51,42 +48,47 @@
         ::-webkit-scrollbar-track { background: #0f0720; }
         ::-webkit-scrollbar-thumb { background: #581c87; border-radius: 3px; }
 
-        .glass {
-            background: rgba(19, 11, 41, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.05);
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left-color: #a855f7;
+            border-radius: 50%;
+            width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-[#05030a] text-white h-screen flex flex-col overflow-hidden font-sans">
+<body class="h-screen flex flex-col overflow-hidden font-sans selection:bg-purple-500 selection:text-white">
 
     <!-- Header -->
-    <header class="h-16 border-b border-purple-900/30 flex items-center justify-between px-6 bg-[#0f0720] z-20 shrink-0">
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 text-xl font-bold tracking-tight">
-                <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+    <header class="h-16 border-b border-purple-900/30 flex items-center justify-between px-6 bg-[#0f0720] shrink-0 z-20">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2 font-bold text-xl tracking-tight">
+                <div class="w-8 h-8 bg-gradient-to-br from-purple-600 to-fuchsia-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/50">
                     <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>
                 </div>
                 AudioRemix
             </div>
             
-            <div class="h-8 w-[1px] bg-gray-800 mx-2"></div>
+            <div class="h-8 w-[1px] bg-white/10"></div>
 
-            <label class="cursor-pointer bg-purple-700 hover:bg-purple-600 text-white px-4 py-1.5 rounded-md text-sm font-medium transition flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                Upload File
-                <input type="file" id="fileInput" accept="audio/*" class="hidden">
-            </label>
-            
-            <div class="flex flex-col justify-center">
-                <span id="fileName" class="text-xs text-gray-300 font-mono max-w-[200px] truncate">No file loaded</span>
-                <span id="statusText" class="text-[10px] text-gray-500">Idle</span>
+            <div class="flex items-center gap-4">
+                <label class="cursor-pointer bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-purple-900/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                    Upload Audio
+                    <input type="file" id="fileInput" accept="audio/*" class="hidden">
+                </label>
+                <div class="flex flex-col">
+                    <span id="fileName" class="text-xs text-gray-300 font-mono max-w-[200px] truncate">No file selected</span>
+                    <span id="statusText" class="text-[10px] text-gray-500">Waiting for input...</span>
+                </div>
             </div>
         </div>
 
         <div class="flex gap-3">
-            <button id="resetBtn" class="px-4 py-1.5 text-xs font-bold text-gray-400 hover:text-white border border-gray-800 rounded hover:bg-gray-800 transition">RESET</button>
-            <button id="downloadBtn" class="bg-white text-black px-4 py-1.5 rounded text-xs font-bold hover:bg-gray-200 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <button id="resetBtn" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white border border-gray-800 rounded hover:bg-gray-800 transition">RESET</button>
+            <button id="downloadBtn" class="bg-white text-black px-5 py-2 rounded text-xs font-bold hover:bg-gray-200 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 DOWNLOAD WAV
             </button>
         </div>
@@ -95,36 +97,40 @@
     <!-- Main Workspace -->
     <div class="flex-1 flex overflow-hidden">
         
-        <!-- Left: Visualizer & Player -->
+        <!-- Left: Visualizer Area -->
         <div class="flex-1 flex flex-col bg-gradient-to-b from-[#0f0720] to-[#05030a] relative">
             
-            <!-- Waveform Container -->
-            <div class="flex-1 flex items-center justify-center px-4 relative">
-                <div id="waveform" class="w-full h-64"></div>
+            <!-- Waveform -->
+            <div class="flex-1 flex items-center justify-center px-6 relative group">
+                <!-- The Waveform Container -->
+                <div id="waveform" class="w-full h-48 opacity-80 transition-opacity hover:opacity-100"></div>
                 
-                <!-- Loading / Error Overlay -->
-                <div id="overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-[#05030a]/80 z-10 hidden backdrop-blur-sm">
-                    <div id="spinner" class="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-                    <p id="overlayText" class="text-purple-300 font-mono text-sm">Processing...</p>
+                <!-- Center Line -->
+                <div class="absolute w-full h-[1px] bg-white/5 pointer-events-none"></div>
+
+                <!-- Loading Overlay -->
+                <div id="loader" class="absolute inset-0 flex flex-col items-center justify-center bg-[#05030a]/90 z-10 hidden backdrop-blur-sm">
+                    <div class="loader mb-4"></div>
+                    <p id="loaderText" class="text-purple-300 font-mono text-sm">Loading Audio...</p>
                 </div>
             </div>
 
-            <!-- Transport Controls -->
-            <div class="h-20 border-t border-purple-900/20 bg-[#0a0514] flex items-center justify-between px-8 shrink-0">
-                <div class="flex items-center gap-4">
-                    <button id="playBtn" class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                        <svg id="playIcon" class="w-5 h-5 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                        <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            <!-- Player Controls -->
+            <div class="h-24 bg-[#0a0514] border-t border-purple-900/20 flex items-center justify-between px-8 shrink-0">
+                <div class="flex items-center gap-6">
+                    <button id="playBtn" class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-black hover:scale-105 transition shadow-[0_0_20px_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <svg id="playIcon" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg id="pauseIcon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </button>
-                    <div class="font-mono text-sm">
-                        <span id="currentTime" class="text-white font-bold">0:00</span>
-                        <span id="totalTime" class="text-gray-600"> / 0:00</span>
+                    <div class="flex flex-col">
+                        <span id="currentTime" class="text-2xl font-mono font-bold text-white">0:00</span>
+                        <span id="totalTime" class="text-xs text-gray-500 font-mono">/ 0:00</span>
                     </div>
                 </div>
                 
-                <!-- Console Log -->
-                <div id="consoleLog" class="text-[10px] font-mono text-green-500/70 max-w-md truncate hidden md:block">
-                    > System Ready.
+                <!-- Debug Log -->
+                <div id="debugLog" class="text-[10px] font-mono text-gray-600 max-w-md text-right hidden md:block">
+                    System Ready.
                 </div>
             </div>
         </div>
@@ -133,304 +139,271 @@
         <div class="w-80 lg:w-96 bg-[#0a0514] border-l border-purple-900/20 flex flex-col overflow-y-auto custom-scrollbar shrink-0">
             
             <!-- Presets -->
-            <div class="p-5 border-b border-white/5">
-                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Quick Presets</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="applyPreset('slowed')" class="py-2 bg-purple-900/20 border border-purple-800/50 rounded hover:bg-purple-800/40 text-xs text-purple-200 transition">Slowed + Reverb</button>
-                    <button onclick="applyPreset('nightcore')" class="py-2 bg-purple-900/20 border border-purple-800/50 rounded hover:bg-purple-800/40 text-xs text-purple-200 transition">Nightcore</button>
+            <div class="p-6 border-b border-white/5">
+                <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">Quick Presets</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="applyPreset('slowed')" class="py-3 bg-purple-900/20 border border-purple-800/50 rounded-lg hover:bg-purple-800/40 text-xs text-purple-200 transition font-medium">Slowed + Reverb</button>
+                    <button onclick="applyPreset('nightcore')" class="py-3 bg-purple-900/20 border border-purple-800/50 rounded-lg hover:bg-purple-800/40 text-xs text-purple-200 transition font-medium">Nightcore</button>
                 </div>
             </div>
 
-            <!-- Effects -->
-            <div class="p-5 space-y-6">
+            <!-- Effects Sliders -->
+            <div class="p-6 space-y-8">
                 
                 <!-- Speed -->
                 <div>
-                    <div class="flex justify-between mb-2">
+                    <div class="flex justify-between mb-2 items-end">
                         <label class="text-xs font-medium text-gray-400">Speed</label>
-                        <span id="speedVal" class="text-[10px] bg-purple-900 px-1.5 py-0.5 rounded text-purple-200">1.00x</span>
+                        <span id="speedVal" class="text-[10px] bg-purple-900/50 border border-purple-700/50 px-2 py-0.5 rounded text-purple-200 font-mono">1.00x</span>
                     </div>
                     <input type="range" id="speedRange" min="0.5" max="1.5" step="0.01" value="1">
                 </div>
 
                 <!-- Pitch -->
                 <div>
-                    <div class="flex justify-between mb-2">
+                    <div class="flex justify-between mb-2 items-end">
                         <label class="text-xs font-medium text-gray-400">Pitch Shift</label>
-                        <span id="pitchVal" class="text-[10px] bg-purple-900 px-1.5 py-0.5 rounded text-purple-200">0 semi</span>
+                        <span id="pitchVal" class="text-[10px] bg-purple-900/50 border border-purple-700/50 px-2 py-0.5 rounded text-purple-200 font-mono">0 semi</span>
                     </div>
                     <input type="range" id="pitchRange" min="-12" max="12" step="1" value="0">
                 </div>
 
                 <!-- Reverb -->
                 <div>
-                    <div class="flex justify-between mb-2">
+                    <div class="flex justify-between mb-2 items-end">
                         <label class="text-xs font-medium text-gray-400">Reverb</label>
-                        <span id="reverbVal" class="text-[10px] bg-purple-900 px-1.5 py-0.5 rounded text-purple-200">0%</span>
+                        <span id="reverbVal" class="text-[10px] bg-purple-900/50 border border-purple-700/50 px-2 py-0.5 rounded text-purple-200 font-mono">0%</span>
                     </div>
                     <input type="range" id="reverbRange" min="0" max="0.8" step="0.01" value="0">
                 </div>
 
                 <!-- Bass -->
                 <div>
-                    <div class="flex justify-between mb-2">
+                    <div class="flex justify-between mb-2 items-end">
                         <label class="text-xs font-medium text-gray-400">Bass Boost</label>
-                        <span id="bassVal" class="text-[10px] bg-purple-900 px-1.5 py-0.5 rounded text-purple-200">0 dB</span>
+                        <span id="bassVal" class="text-[10px] bg-purple-900/50 border border-purple-700/50 px-2 py-0.5 rounded text-purple-200 font-mono">0 dB</span>
                     </div>
                     <input type="range" id="bassRange" min="0" max="20" step="1" value="0">
                 </div>
             </div>
 
-            <!-- EQ -->
-            <div class="flex-1 p-5 bg-[#05030a] border-t border-white/5">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Equalizer</h3>
-                    <button onclick="resetEQ()" class="text-[10px] text-purple-400 hover:text-white">Flat</button>
+            <!-- Graphic EQ -->
+            <div class="flex-1 p-6 bg-[#080410] border-t border-white/5">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Graphic Equalizer</h3>
+                    <button onclick="resetEQ()" class="text-[10px] text-purple-400 hover:text-white underline decoration-purple-500/30">Flat</button>
                 </div>
                 <div class="flex justify-between h-32 items-end px-1">
-                    <!-- EQ Sliders generated by JS -->
-                    <div class="flex flex-col items-center gap-1 h-full"><input type="range" class="slider-v eq-band" data-idx="0" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">60</span></div>
-                    <div class="flex flex-col items-center gap-1 h-full"><input type="range" class="slider-v eq-band" data-idx="1" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">150</span></div>
-                    <div class="flex flex-col items-center gap-1 h-full"><input type="range" class="slider-v eq-band" data-idx="2" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">400</span></div>
-                    <div class="flex flex-col items-center gap-1 h-full"><input type="range" class="slider-v eq-band" data-idx="3" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">1k</span></div>
-                    <div class="flex flex-col items-center gap-1 h-full"><input type="range" class="slider-v eq-band" data-idx="4" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">2.5k</span></div>
-                    <div class="flex flex-col items-center gap-1 h-full"><input type="range" class="slider-v eq-band" data-idx="5" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">6k</span></div>
-                    <div class="flex flex-col items-center gap-1 h-full"><input type="range" class="slider-v eq-band" data-idx="6" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">14k</span></div>
+                    <!-- EQ Bands -->
+                    <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-idx="0" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">60</span></div>
+                    <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-idx="1" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">150</span></div>
+                    <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-idx="2" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">400</span></div>
+                    <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-idx="3" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">1k</span></div>
+                    <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-idx="4" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">2.5k</span></div>
+                    <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-idx="5" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">6k</span></div>
+                    <div class="flex flex-col items-center gap-2 h-full"><input type="range" class="slider-v eq-band" data-idx="6" min="-12" max="12" value="0"><span class="text-[9px] text-gray-600">14k</span></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Download Progress Modal -->
-    <div id="dlModal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col items-center justify-center">
-        <div class="w-64">
-            <div class="flex justify-between text-xs text-purple-300 mb-1">
-                <span>Rendering...</span>
+    <!-- Processing Modal -->
+    <div id="dlModal" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col items-center justify-center backdrop-blur-md">
+        <div class="w-72">
+            <div class="flex justify-between text-xs text-purple-300 mb-2 font-mono">
+                <span>RENDERING AUDIO</span>
                 <span id="dlPercent">0%</span>
             </div>
-            <div class="w-full bg-gray-800 rounded-full h-1.5">
-                <div id="dlBar" class="bg-purple-500 h-1.5 rounded-full transition-all duration-100" style="width: 0%"></div>
+            <div class="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+                <div id="dlBar" class="bg-gradient-to-r from-purple-600 to-pink-500 h-2 rounded-full transition-all duration-100" style="width: 0%"></div>
             </div>
         </div>
-        <p class="text-gray-500 text-xs mt-4">Please wait while we process your audio.</p>
+        <p class="text-gray-500 text-xs mt-4 animate-pulse">Applying high-quality effects...</p>
     </div>
 
     <script>
-        // --- Global Variables ---
-        let wavesurfer;
-        let tonePlayer;
-        let audioBuffer = null;
-        let isPlaying = false;
+        // --- Configuration ---
+        const EQ_FREQS = [60, 150, 400, 1000, 2500, 6000, 14000];
         
-        // Audio Nodes
+        // --- State ---
+        let wavesurfer, tonePlayer;
+        let isPlaying = false;
+        let audioBlobUrl = null;
+        let audioBuffer = null; // For offline rendering
+        
+        // Effects
         let pitchShift, reverb, bassBoost, limiter;
         let eqNodes = [];
-        const eqFreqs = [60, 150, 400, 1000, 2500, 6000, 14000];
 
-        // DOM Elements
+        // --- DOM ---
         const els = {
             fileInput: document.getElementById('fileInput'),
             playBtn: document.getElementById('playBtn'),
             downloadBtn: document.getElementById('downloadBtn'),
             fileName: document.getElementById('fileName'),
             status: document.getElementById('statusText'),
-            console: document.getElementById('consoleLog'),
-            overlay: document.getElementById('overlay'),
-            overlayText: document.getElementById('overlayText'),
-            spinner: document.getElementById('spinner'),
+            debug: document.getElementById('debugLog'),
+            loader: document.getElementById('loader'),
+            loaderText: document.getElementById('loaderText'),
             playIcon: document.getElementById('playIcon'),
             pauseIcon: document.getElementById('pauseIcon'),
             currentTime: document.getElementById('currentTime'),
             totalTime: document.getElementById('totalTime')
         };
 
-        // --- Logging Helper ---
+        // --- Logging ---
         function log(msg, isError = false) {
-            els.console.innerText = `> ${msg}`;
+            els.debug.innerText = `> ${msg}`;
             els.status.innerText = msg;
-            if(isError) {
-                els.console.style.color = '#ef4444'; // Red
+            if (isError) {
+                els.debug.style.color = '#f87171';
                 console.error(msg);
             } else {
-                els.console.style.color = '#22c55e'; // Green
+                els.debug.style.color = '#9ca3af';
             }
         }
 
         function showLoader(msg) {
-            els.overlay.classList.remove('hidden');
-            els.overlayText.innerText = msg;
-            els.spinner.classList.remove('hidden');
+            els.loader.classList.remove('hidden');
+            els.loaderText.innerText = msg;
         }
 
         function hideLoader() {
-            els.overlay.classList.add('hidden');
-        }
-
-        function showError(msg) {
-            els.overlay.classList.remove('hidden');
-            els.overlayText.innerText = msg;
-            els.overlayText.classList.add('text-red-400');
-            els.spinner.classList.add('hidden');
-            log(msg, true);
+            els.loader.classList.add('hidden');
         }
 
         // --- Initialization ---
         async function init() {
-            try {
-                // 1. Setup WaveSurfer (Visuals Only)
-                wavesurfer = WaveSurfer.create({
-                    container: '#waveform',
-                    waveColor: '#4c1d95',
-                    progressColor: '#a855f7',
-                    cursorColor: '#fff',
-                    barWidth: 3,
-                    barGap: 3,
-                    barRadius: 3,
-                    height: 200,
-                    normalize: true,
-                    interact: true,
-                });
+            // 1. WaveSurfer (Visuals)
+            wavesurfer = WaveSurfer.create({
+                container: '#waveform',
+                waveColor: '#4c1d95',
+                progressColor: '#a855f7',
+                cursorColor: '#ffffff',
+                barWidth: 2,
+                barGap: 3,
+                barRadius: 2,
+                height: 192,
+                normalize: true,
+                interact: true,
+                fillParent: true, // SoundCloud style
+                minPxPerSec: 20   // Zoomed out view
+            });
 
-                // 2. Setup Tone.js Context (Audio Processing)
-                // We don't start it yet, waiting for user interaction
-                
-                // 3. Setup Effects Chain
-                pitchShift = new Tone.PitchShift({ pitch: 0 }).toDestination();
-                reverb = new Tone.Reverb({ decay: 2.0, preDelay: 0.1 }).toDestination();
-                reverb.wet.value = 0;
-                bassBoost = new Tone.Filter(200, "lowshelf").toDestination();
-                limiter = new Tone.Limiter(-1).toDestination();
+            // 2. Tone.js Effects Chain
+            pitchShift = new Tone.PitchShift({ pitch: 0 }).toDestination();
+            reverb = new Tone.Reverb({ decay: 2.5, preDelay: 0.1 }).toDestination();
+            reverb.wet.value = 0;
+            bassBoost = new Tone.Filter(200, "lowshelf").toDestination();
+            limiter = new Tone.Limiter(-1).toDestination();
 
-                // Create EQ Nodes
-                eqNodes = eqFreqs.map(f => {
-                    const filter = new Tone.Filter(f, "peaking");
-                    filter.Q.value = 1;
-                    filter.gain.value = 0;
-                    return filter;
-                });
-
-                log("System Initialized. Waiting for file.");
-
-            } catch (e) {
-                showError("Init Failed: " + e.message);
-            }
+            // EQ
+            eqNodes = EQ_FREQS.map(f => {
+                const filter = new Tone.Filter(f, "peaking");
+                filter.Q.value = 1;
+                filter.gain.value = 0;
+                return filter;
+            });
         }
-
         init();
 
-        // --- File Handling ---
+        // --- File Loading (Robust Method) ---
         els.fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Reset State
-            if(tonePlayer) {
-                tonePlayer.stop();
-                tonePlayer.dispose();
-            }
+            // Cleanup
+            if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl);
+            if (tonePlayer) { tonePlayer.dispose(); }
+            
+            // Reset UI
             isPlaying = false;
-            updatePlayButton();
+            updatePlayBtn();
             els.playBtn.disabled = true;
             els.downloadBtn.disabled = true;
             els.fileName.innerText = file.name;
             
-            showLoader("Reading File...");
+            showLoader("Loading Audio File...");
+            log("Starting load sequence...");
 
             try {
-                // 1. Read File
-                const arrayBuffer = await file.arrayBuffer();
-                
-                // 2. Decode Audio (Native Browser Decode)
-                showLoader("Decoding Audio...");
-                const audioCtx = Tone.getContext().rawContext;
-                audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+                // 1. Create Blob URL (Instant, no memory crash)
+                audioBlobUrl = URL.createObjectURL(file);
 
-                if(!audioBuffer) throw new Error("Decoding returned empty buffer");
+                // 2. Load WaveSurfer (Visuals)
+                // We use the URL method which is safer for large files in WS v7
+                await wavesurfer.load(audioBlobUrl);
+                wavesurfer.setVolume(0); // Mute visuals, Tone handles audio
 
-                // 3. Load into Tone.Player
-                showLoader("Building Audio Graph...");
-                tonePlayer = new Tone.Player(audioBuffer);
-                
-                // Connect Chain: Player -> Pitch -> Reverb -> Bass -> EQ -> Limiter -> Out
-                tonePlayer.disconnect();
-                let current = tonePlayer;
-                current.connect(pitchShift);
-                pitchShift.connect(reverb);
-                reverb.connect(bassBoost);
-                
-                let prev = bassBoost;
-                eqNodes.forEach(node => {
-                    prev.connect(node);
-                    prev = node;
-                });
-                prev.connect(limiter);
-                limiter.connect(Tone.Destination);
+                // 3. Load Tone.Player (Audio)
+                // We also use the URL method. Tone handles the XHR/Decoding internally.
+                tonePlayer = new Tone.Player(audioBlobUrl, () => {
+                    log("Tone.Player loaded.");
+                    
+                    // Connect Chain
+                    tonePlayer.disconnect();
+                    let current = tonePlayer;
+                    current.connect(pitchShift);
+                    pitchShift.connect(reverb);
+                    reverb.connect(bassBoost);
+                    
+                    let prev = bassBoost;
+                    eqNodes.forEach(n => { prev.connect(n); prev = n; });
+                    prev.connect(limiter);
+                    limiter.connect(Tone.Destination);
 
-                // 4. Load into WaveSurfer (Visuals)
-                // We mute wavesurfer because Tone.js handles the audio
-                wavesurfer.loadDecodedBuffer(audioBuffer);
-                wavesurfer.setVolume(0);
-
-                wavesurfer.on('ready', () => {
+                    // Ready
                     hideLoader();
                     els.playBtn.disabled = false;
                     els.downloadBtn.disabled = false;
-                    els.totalTime.innerText = " / " + formatTime(audioBuffer.duration);
-                    log("File Ready.");
-                });
-
-                // 5. Sync Logic: Seeking
-                wavesurfer.on('interaction', () => {
-                    if(!tonePlayer.loaded) return;
-                    const time = wavesurfer.getCurrentTime();
+                    els.totalTime.innerText = "/ " + formatTime(tonePlayer.buffer.duration);
                     
-                    // If playing, jump and keep playing
-                    if(tonePlayer.state === "started") {
-                        tonePlayer.seek(time);
-                    } else {
-                        // If paused, just update the start offset internally in Tone
-                        // Tone.Player doesn't have a "cursor" property when stopped, 
-                        // so we just handle it on the next Play click.
-                    }
-                });
+                    // Store buffer for offline rendering later
+                    audioBuffer = tonePlayer.buffer; 
+                    
+                    log("Ready to play.");
+                }).toDestination();
 
             } catch (err) {
-                console.error(err);
-                showError("Error: " + err.message);
+                hideLoader();
+                log("Load Error: " + err.message, true);
+                alert("Could not load file. It might be corrupt or format unsupported.\nError: " + err.message);
             }
         });
 
-        // --- Playback Logic ---
+        // --- Sync & Playback ---
+        
+        // Sync WaveSurfer Seek -> Tone.Player
+        wavesurfer.on('interaction', () => {
+            if(!tonePlayer || !tonePlayer.loaded) return;
+            const t = wavesurfer.getCurrentTime();
+            
+            if(tonePlayer.state === "started") {
+                // Tone.Player.seek() expects offset in seconds
+                tonePlayer.seek(t);
+            }
+        });
+
         els.playBtn.addEventListener('click', async () => {
-            await Tone.start(); // Ensure AudioContext is running
+            await Tone.start(); // Required for browser audio policy
 
             if (isPlaying) {
-                // Pause
                 tonePlayer.stop();
                 wavesurfer.pause();
                 isPlaying = false;
                 log("Paused");
             } else {
-                // Play
-                // Get start time from WaveSurfer cursor
-                const startOffset = wavesurfer.getCurrentTime();
-                
-                // Start Tone (Audio)
-                tonePlayer.start(undefined, startOffset);
-                
-                // Start WaveSurfer (Visuals)
+                const t = wavesurfer.getCurrentTime();
+                tonePlayer.start(undefined, t);
                 wavesurfer.play();
-                
                 isPlaying = true;
                 log("Playing");
-                
-                // Start UI Loop
                 requestAnimationFrame(uiLoop);
             }
-            updatePlayButton();
+            updatePlayBtn();
         });
 
-        function updatePlayButton() {
+        function updatePlayBtn() {
             if(isPlaying) {
                 els.playIcon.classList.add('hidden');
                 els.pauseIcon.classList.remove('hidden');
@@ -443,14 +416,14 @@
         function uiLoop() {
             if(!isPlaying) return;
             
-            // Update Time Display
+            // Update Timer
             const t = wavesurfer.getCurrentTime();
             els.currentTime.innerText = formatTime(t);
 
-            // Check if finished
-            if(t >= audioBuffer.duration) {
+            // Check End
+            if(t >= wavesurfer.getDuration() - 0.1) {
                 isPlaying = false;
-                updatePlayButton();
+                updatePlayBtn();
                 tonePlayer.stop();
                 wavesurfer.stop();
             } else {
@@ -464,43 +437,43 @@
             return `${m}:${sec < 10 ? '0' : ''}${sec}`;
         }
 
-        // --- Effects Controls ---
+        // --- Effects Logic ---
         
-        // Helper to update slider UI and value
-        function setControl(id, value) {
+        function setVal(id, val) {
             const el = document.getElementById(id);
-            if(el) {
-                el.value = value;
-                el.dispatchEvent(new Event('input'));
-            }
+            if(el) { el.value = val; el.dispatchEvent(new Event('input')); }
         }
 
+        // Speed
         document.getElementById('speedRange').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
             document.getElementById('speedVal').innerText = val.toFixed(2) + 'x';
             if(tonePlayer) tonePlayer.playbackRate = val;
-            wavesurfer.setPlaybackRate(val); // Keep visuals synced
+            wavesurfer.setPlaybackRate(val);
         });
 
+        // Pitch
         document.getElementById('pitchRange').addEventListener('input', (e) => {
             const val = parseInt(e.target.value);
             document.getElementById('pitchVal').innerText = val + ' semi';
             pitchShift.pitch = val;
         });
 
+        // Reverb
         document.getElementById('reverbRange').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
             document.getElementById('reverbVal').innerText = Math.round(val * 100) + '%';
             reverb.wet.value = val;
         });
 
+        // Bass
         document.getElementById('bassRange').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value);
             document.getElementById('bassVal').innerText = val + ' dB';
             bassBoost.gain.value = val;
         });
 
-        // EQ Controls
+        // EQ
         document.querySelectorAll('.eq-band').forEach(slider => {
             slider.addEventListener('input', (e) => {
                 const idx = parseInt(e.target.dataset.idx);
@@ -509,59 +482,53 @@
             });
         });
 
-        window.resetEQ = function() {
-            document.querySelectorAll('.eq-band').forEach(s => {
-                s.value = 0;
-                s.dispatchEvent(new Event('input'));
-            });
-        }
+        window.resetEQ = () => {
+            document.querySelectorAll('.eq-band').forEach(s => { s.value = 0; s.dispatchEvent(new Event('input')); });
+        };
 
-        window.applyPreset = function(type) {
+        window.applyPreset = (type) => {
             if(type === 'slowed') {
-                setControl('speedRange', 0.85);
-                setControl('pitchRange', -2);
-                setControl('reverbRange', 0.3);
-                setControl('bassRange', 6);
+                setVal('speedRange', 0.85);
+                setVal('pitchRange', -2);
+                setVal('reverbRange', 0.35);
+                setVal('bassRange', 6);
             } else if (type === 'nightcore') {
-                setControl('speedRange', 1.25);
-                setControl('pitchRange', 4);
-                setControl('reverbRange', 0.1);
-                setControl('bassRange', -2);
+                setVal('speedRange', 1.25);
+                setVal('pitchRange', 4);
+                setVal('reverbRange', 0.1);
+                setVal('bassRange', -2);
             }
-        }
+        };
 
         document.getElementById('resetBtn').addEventListener('click', () => {
-            setControl('speedRange', 1);
-            setControl('pitchRange', 0);
-            setControl('reverbRange', 0);
-            setControl('bassRange', 0);
+            setVal('speedRange', 1);
+            setVal('pitchRange', 0);
+            setVal('reverbRange', 0);
+            setVal('bassRange', 0);
             resetEQ();
         });
 
-        // --- Download Logic (Offline Rendering) ---
+        // --- Download (Offline Render) ---
         els.downloadBtn.addEventListener('click', async () => {
             if(!audioBuffer) return;
 
-            // Show Modal
             const modal = document.getElementById('dlModal');
             const bar = document.getElementById('dlBar');
             const txt = document.getElementById('dlPercent');
             modal.classList.remove('hidden');
-            
-            try {
-                // Calculate Duration
-                const rate = tonePlayer.playbackRate;
-                const duration = (audioBuffer.duration / rate) + 3.0; // Add tail
 
-                // Create Offline Context
+            try {
+                // 1. Setup Offline Context
+                const rate = tonePlayer.playbackRate;
+                const duration = (audioBuffer.duration / rate) + 3.0; // +3s tail
                 const offlineCtx = new Tone.OfflineContext(2, duration, audioBuffer.sampleRate);
 
-                // Rebuild Graph Offline
+                // 2. Rebuild Graph
                 const offPlayer = new Tone.Player(audioBuffer);
                 offPlayer.playbackRate = rate;
 
                 const offPitch = new Tone.PitchShift({ pitch: pitchShift.pitch });
-                const offReverb = new Tone.Reverb({ decay: 2.0, preDelay: 0.1 });
+                const offReverb = new Tone.Reverb({ decay: 2.5, preDelay: 0.1 });
                 await offReverb.ready;
                 offReverb.wet.value = reverb.wet.value;
 
@@ -575,8 +542,7 @@
                 offReverb.connect(offBass);
                 
                 let prev = offBass;
-                // Rebuild EQ
-                eqFreqs.forEach((f, i) => {
+                EQ_FREQS.forEach((f, i) => {
                     const filter = new Tone.Filter(f, "peaking");
                     filter.Q.value = 1;
                     filter.gain.value = eqNodes[i].gain.value;
@@ -588,26 +554,24 @@
                 prev.connect(offLimiter);
                 offLimiter.connect(offlineCtx.destination);
 
-                // Start
                 offPlayer.start(0);
 
-                // Fake Progress (since Tone doesn't provide granular progress)
+                // 3. Render
+                // Fake progress bar since Tone doesn't emit progress events
                 let p = 0;
-                const interval = setInterval(() => {
-                    p += 5;
-                    if(p > 90) p = 90;
+                const timer = setInterval(() => {
+                    p += 2; if(p>95) p=95;
                     bar.style.width = p + "%";
                     txt.innerText = p + "%";
                 }, 100);
 
-                // Render
                 const renderedBuffer = await offlineCtx.render();
+                clearInterval(timer);
                 
-                clearInterval(interval);
                 bar.style.width = "100%";
                 txt.innerText = "100%";
 
-                // Encode & Download
+                // 4. Encode & Download
                 const wav = bufferToWave(renderedBuffer, renderedBuffer.length);
                 const url = URL.createObjectURL(wav);
                 const a = document.createElement('a');
@@ -621,9 +585,9 @@
                     bar.style.width = "0%";
                 }, 1000);
 
-            } catch (e) {
+            } catch (err) {
                 modal.classList.add('hidden');
-                showError("Render Failed: " + e.message);
+                alert("Render Failed: " + err.message);
             }
         });
 
